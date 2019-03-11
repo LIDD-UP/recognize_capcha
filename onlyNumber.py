@@ -28,7 +28,8 @@ def gen_captcha_text_and_image():
     captcha = image.generate(captcha_text)  
     #image.write(captcha_text, captcha_text + '.jpg')   
    
-    captcha_image = Image.open(captcha)  
+    captcha_image = Image.open(captcha)
+    captcha_image = captcha_image.resize((30,100))
     captcha_image = np.array(captcha_image)  
     return captcha_text, captcha_image  
 
@@ -115,7 +116,7 @@ def get_next_batch(batch_size=128):
     def wrap_gen_captcha_text_and_image():  
         while True:  
             text, image = gen_captcha_text_and_image()  
-            if image.shape == (60, 160, 3):  
+            if image.shape == (30, 100, 3):
                 return text, image  
    
     for i in range(batch_size):  
@@ -202,7 +203,7 @@ def train_crack_captcha_cnn():
                 # 如果准确率大于50%,保存模型,完成训练  
                 # if acc > 0.30:
                 print('大于--------------')
-                saver.save(sess, "./model/crack_capcha1.model", global_step=step)
+                saver.save(sess, "./model/crack_capcha2.model", global_step=step)
                 # break
 
             step += 1  
@@ -211,14 +212,15 @@ def crack_captcha(captcha_image):
    
     saver = tf.train.Saver()  
     with tf.Session() as sess:  
-        saver.restore(sess, "./model/crack_capcha1.model-2300")
+        saver.restore(sess, "./model/crack_capcha2.model-2300")
    
         predict = tf.argmax(tf.reshape(output, [-1, MAX_CAPTCHA, CHAR_SET_LEN]), 2)  
         text_list = sess.run(predict, feed_dict={X: [captcha_image], keep_prob: 1})  
         text = text_list[0].tolist()  
-        return text 
+        return text
+
 if __name__ == '__main__':
-    train = 1
+    train = 0
     if train == 0:
         number = ['0','1','2','3','4','5','6','7','8','9']  
         #alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']  
@@ -227,8 +229,8 @@ if __name__ == '__main__':
         text, image = gen_captcha_text_and_image()  
         print("验证码图像channel:", image.shape)  # (60, 160, 3)  
         # 图像大小  
-        IMAGE_HEIGHT = 60  
-        IMAGE_WIDTH = 160  
+        IMAGE_HEIGHT = 30
+        IMAGE_WIDTH = 100
         MAX_CAPTCHA = len(text)  
         print("验证码文本最长字符数", MAX_CAPTCHA)
         # 文本转向量  
@@ -242,30 +244,29 @@ if __name__ == '__main__':
         
         train_crack_captcha_cnn()
     if train == 1:
-        # number = ['0','1','2','3','4','5','6','7','8','9']
-        IMAGE_HEIGHT = 60
-        IMAGE_WIDTH = 160
+        number = ['0','1','2','3','4','5','6','7','8','9']
+        IMAGE_HEIGHT = 30
+        IMAGE_WIDTH = 100
         char_set = number
         CHAR_SET_LEN = len(char_set)
-        # CHAR_SET_LEN = 6
+        CHAR_SET_LEN = 6
+
+
+
+        text, image = gen_captcha_text_and_image()
+
+        f = plt.figure()
+        ax = f.add_subplot(111)
+        ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)
+        plt.imshow(image)
+
+        plt.show()
         #
-        #
-        #
-        # text, image = gen_captcha_text_and_image()
-        #
-        #
-        # f = plt.figure()
-        # ax = f.add_subplot(111)
-        # ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)
-        # plt.imshow(image)
-        #
-        # plt.show()
-        # #
-        # MAX_CAPTCHA = len(text)
+        MAX_CAPTCHA = len(text)
         MAX_CAPTCHA = 6
-        from PIL import Image
-        image = Image.open('./sample/randomimage1.jpg')
-        image = np.array(image)
+        # from PIL import Image
+        # image = Image.open('./sample/randomimage1.jpg')
+        # image = np.array(image)
         image = convert2gray(image)  
         image = image.flatten() / 255  
         
