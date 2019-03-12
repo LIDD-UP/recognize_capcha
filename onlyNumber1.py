@@ -20,7 +20,7 @@ def random_captcha_text(char_set=number, captcha_size=6):
    
 
 def gen_captcha_text_and_image():  
-    image = ImageCaptcha()  
+    image = ImageCaptcha(height=30, width=100)
    
     captcha_text = random_captcha_text()  
     captcha_text = ''.join(captcha_text)  
@@ -28,8 +28,7 @@ def gen_captcha_text_and_image():
     captcha = image.generate(captcha_text)  
     #image.write(captcha_text, captcha_text + '.jpg')   
    
-    captcha_image = Image.open(captcha)
-    # captcha_image = captcha_image.resize((30,100))
+    captcha_image = Image.open(captcha)  
     captcha_image = np.array(captcha_image)  
     return captcha_text, captcha_image  
 
@@ -116,8 +115,8 @@ def get_next_batch(batch_size=128):
     def wrap_gen_captcha_text_and_image():  
         while True:  
             text, image = gen_captcha_text_and_image()  
-            if image.shape == (30, 100, 3):
-                return text, image  
+            # if image.shape == (60, 160, 3):
+            return text, image
    
     for i in range(batch_size):  
         text, image = wrap_gen_captcha_text_and_image()  
@@ -132,7 +131,7 @@ def get_next_batch(batch_size=128):
    
 # 定义CNN  
 def crack_captcha_cnn(w_alpha=0.01, b_alpha=0.1):  
-    x = tf.reshape(X, shape=[-1, IMAGE_HEIGHT, IMAGE_WIDTH, 1])  
+    x = tf.reshape(X, shape=[-1, IMAGE_HEIGHT, IMAGE_WIDTH, 1])
    
     #w_c1_alpha = np.sqrt(2.0/(IMAGE_HEIGHT*IMAGE_WIDTH)) #  
     #w_c2_alpha = np.sqrt(2.0/(3*3*32))   
@@ -142,8 +141,9 @@ def crack_captcha_cnn(w_alpha=0.01, b_alpha=0.1):
    
     # 3 conv layer  
     w_c1 = tf.Variable(w_alpha*tf.random_normal([3, 3, 1, 32]))  
-    b_c1 = tf.Variable(b_alpha*tf.random_normal([32]))  
-    conv1 = tf.nn.relu(tf.nn.bias_add(tf.nn.conv2d(x, w_c1, strides=[1, 1, 1, 1], padding='SAME'), b_c1))  
+    b_c1 = tf.Variable(b_alpha*tf.random_normal([32]))
+    conv_tmp = tf.nn.conv2d(x, w_c1, strides=[1, 1, 1, 1], padding='SAME')
+    conv1 = tf.nn.relu(tf.nn.bias_add(conv_tmp, b_c1))
     conv1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  
     conv1 = tf.nn.dropout(conv1, keep_prob)  
    
@@ -160,7 +160,7 @@ def crack_captcha_cnn(w_alpha=0.01, b_alpha=0.1):
     conv3 = tf.nn.dropout(conv3, keep_prob)  
    
     # Fully connected layer  
-    w_d = tf.Variable(w_alpha*tf.random_normal([8*20*64, 1024]))
+    w_d = tf.Variable(w_alpha*tf.random_normal([4*13*64, 1024]))
     b_d = tf.Variable(b_alpha*tf.random_normal([1024]))  
     dense = tf.reshape(conv3, [-1, w_d.get_shape().as_list()[0]])  
     dense = tf.nn.relu(tf.add(tf.matmul(dense, w_d), b_d))  
@@ -170,8 +170,7 @@ def crack_captcha_cnn(w_alpha=0.01, b_alpha=0.1):
     b_out = tf.Variable(b_alpha*tf.random_normal([MAX_CAPTCHA*CHAR_SET_LEN]))  
     out = tf.add(tf.matmul(dense, w_out), b_out)   
     return out  
-
-
+   
 # 训练  
 def train_crack_captcha_cnn():  
     output = crack_captcha_cnn()  
@@ -191,36 +190,33 @@ def train_crack_captcha_cnn():
         while True:  
             batch_x, batch_y = get_next_batch(64)  
             _, loss_ = sess.run([optimizer, loss], feed_dict={X: batch_x, Y: batch_y, keep_prob: 0.75})  
-            # print(step, loss_)
-            print(step,loss_)
-              
+            print(step, loss_)
+            # print(step)
+
             # 每100 step计算一次准确率  
-            if step % 100 == 0 and step !=0:
-                # print()
+            if step % 10 == 0:
                 batch_x_test, batch_y_test = get_next_batch(100)  
                 acc = sess.run(accuracy, feed_dict={X: batch_x_test, Y: batch_y_test, keep_prob: 1.})  
                 print(step, acc)  
                 # 如果准确率大于50%,保存模型,完成训练  
-                # if acc > 0.30:
-                print('大于--------------')
-                saver.save(sess, "./model/crack_capcha2.model", global_step=step)
-                # break
-
+                # if acc > 0.50:
+                saver.save(sess, "./model/crack_capcha3.model", global_step=step)
+                    # break
+   
             step += 1  
 def crack_captcha(captcha_image):  
     output = crack_captcha_cnn()  
    
     saver = tf.train.Saver()  
     with tf.Session() as sess:  
-        saver.restore(sess, "./model/crack_capcha2.model-2300")
+        saver.restore(sess, "./model/crack_capcha3.model-10")
    
         predict = tf.argmax(tf.reshape(output, [-1, MAX_CAPTCHA, CHAR_SET_LEN]), 2)  
         text_list = sess.run(predict, feed_dict={X: [captcha_image], keep_prob: 1})  
         text = text_list[0].tolist()  
-        return text
-
+        return text 
 if __name__ == '__main__':
-    train = 0
+    train = 1
     if train == 0:
         number = ['0','1','2','3','4','5','6','7','8','9']  
         #alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']  
@@ -244,29 +240,29 @@ if __name__ == '__main__':
         
         train_crack_captcha_cnn()
     if train == 1:
-        number = ['0','1','2','3','4','5','6','7','8','9']
-        IMAGE_HEIGHT = 60
-        IMAGE_WIDTH = 160
+        number = ['0','1','2','3','4','5','6','7','8','9']  
+        IMAGE_HEIGHT = 30
+        IMAGE_WIDTH = 100
         char_set = number
         CHAR_SET_LEN = len(char_set)
-        CHAR_SET_LEN = 6
+        
+        
+     
+        # text, image = gen_captcha_text_and_image()
 
-
-
-        text, image = gen_captcha_text_and_image()
-
-        f = plt.figure()
-        ax = f.add_subplot(111)
-        ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)
-        plt.imshow(image)
-
-        plt.show()
-        #
+        image = Image.open('./sample/randomimage.jpg')
+        text = '926489'
+        image = np.array(image)
+        
+        
+        f = plt.figure()  
+        ax = f.add_subplot(111)  
+        ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)  
+        plt.imshow(image)  
+       
+        plt.show()  
+        
         MAX_CAPTCHA = len(text)
-        MAX_CAPTCHA = 6
-        # from PIL import Image
-        # image = Image.open('./sample/randomimage1.jpg')
-        # image = np.array(image)
         image = convert2gray(image)  
         image = image.flatten() / 255  
         

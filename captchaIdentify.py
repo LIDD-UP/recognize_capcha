@@ -33,9 +33,9 @@ def gen_captcha_text_and_image():
 if __name__ == '__main__':  
     text, image = gen_captcha_text_and_image()  
    
-    f = plt.figure()  
-    ax = f.add_subplot(111)  
-    ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)  
+    f = plt.figure()
+    ax = f.add_subplot(111)
+    ax.text(0.1, 0.9,text, ha='center', va='center', transform=ax.transAxes)
     plt.imshow(image)  
    
     plt.show()  
