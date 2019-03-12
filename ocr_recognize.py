@@ -9,7 +9,7 @@ from PIL import Image
 
 tesseract_cmd = r'F:/tesseract_ocr/Tesseract-OCR/tesseract.exe'
 
-image = Image.open('./sample/randomimage1.jpg')
+image = Image.open('./sample/process2.png')
 code = pytesseract.image_to_string(image,
                                    # config='--psm 6 --oem 3 -c tessedit_char_whitelist=0123456789'
                                      lang='eng',

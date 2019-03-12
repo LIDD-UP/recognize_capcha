@@ -170,7 +170,8 @@ def crack_captcha_cnn(w_alpha=0.01, b_alpha=0.1):
     b_out = tf.Variable(b_alpha*tf.random_normal([MAX_CAPTCHA*CHAR_SET_LEN]))  
     out = tf.add(tf.matmul(dense, w_out), b_out)   
     return out  
-   
+
+
 # 训练  
 def train_crack_captcha_cnn():  
     output = crack_captcha_cnn()  
@@ -216,7 +217,7 @@ def crack_captcha(captcha_image):
         text = text_list[0].tolist()  
         return text 
 if __name__ == '__main__':
-    train = 1
+    train = 0
     if train == 0:
         number = ['0','1','2','3','4','5','6','7','8','9']  
         #alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']  
@@ -272,7 +273,6 @@ if __name__ == '__main__':
         
         predict_text = crack_captcha(image)  
         print("正确: {}  预测: {}".format(text, predict_text))  
-    
-    
-    
-    
+
+
+
