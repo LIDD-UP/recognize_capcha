@@ -8,7 +8,7 @@ from captcha.image import ImageCaptcha
 from PIL import Image
 
 
-image = Image.open('../sample/randomimage2.jpg')
+image = Image.open('../sample/randomimage1.jpg')
 
 print('p_mode',image.mode)
 print(image.getcolors())

@@ -7,7 +7,7 @@
 import pytesseract
 from PIL import Image
 
-tesseract_cmd = r'F:/tesseract_ocr/Tesseract-OCR/tesseract.exe'
+# tesseract_cmd = r'F:/tesseract_ocr/Tesseract-OCR/tesseract.exe'
 
 image = Image.open('./sample/process2.png')
 code = pytesseract.image_to_string(image,
